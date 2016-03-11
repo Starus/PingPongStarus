@@ -11,10 +11,14 @@ from pygame.locals import *
 # ---------------------------------------------------------------------
 WIDTH = 640
 HEIGHT = 480
+sonido_pared = "sonds/Ping_Pong_Ball_pared.mp2"
+sonido_paleta = "sonds/Ping_Pong_Ball_paleta.mp2"
 # ---------------------------------------------------------------------
 # Clases
 # ---------------------------------------------------------------------
+
 class Bola(pygame.sprite.Sprite):
+
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.image = load_image("images/bola.png", True)
@@ -23,40 +27,43 @@ class Bola(pygame.sprite.Sprite):
         self.rect.centery = HEIGHT / 2
         self.speed = [0.35, -0.35]
 
-    def actualizar(self, time, pala_jug1, pala_jug2, puntos, Sonido_pared, Sonido_paleta):
+    def actualizar(self, time, pala_jug1, pala_jug2, puntos):
         self.rect.centerx += self.speed[0] * time
         self.rect.centery += self.speed[1] * time
         if self.rect.left <= 0:
             puntos[1] += 1
+
         if self.rect.right >= WIDTH:
             puntos[0] += 1
 
         if self.rect.left <= 0 or self.rect.right >= WIDTH:
             self.speed[0] = -self.speed[0]
             self.rect.centerx += self.speed[0] * time
-            Sonido_pared.play()
-            #pygame.mixer.Sound.play(Sonido_pared)
+            pygame.mixer.music.load(sonido_pared)
+            pygame.mixer.music.play()
 
         if self.rect.top <= 0 or self.rect.bottom >= HEIGHT:
             self.speed[1] = -self.speed[1]
             self.rect.centery += self.speed[1] * time
-            Sonido_pared.play()
-            #pygame.mixer.Sound.play(Sonido_pared)
+            pygame.mixer.music.load(sonido_pared)
+            pygame.mixer.music.play()
 
         if pygame.sprite.collide_rect(self, pala_jug1):
             self.speed[0] = -self.speed[0]
             self.rect.centerx += self.speed[0] * time
-            Sonido_paleta.play()
-            #pygame.mixer.Sound.play(Sonido_paleta)
+            pygame.mixer.music.load(sonido_paleta)
+            pygame.mixer.music.play()
 
         if pygame.sprite.collide_rect(self, pala_jug2):
             self.speed[0] = -self.speed[0]
             self.rect.centerx += self.speed[0] * time
-            Sonido_paleta.play()
-            #pygame.mixer.Sound.play(Sonido_paleta)
+            pygame.mixer.music.load(sonido_paleta)
+            pygame.mixer.music.play()
 
         return puntos
+
 class PalaP1(pygame.sprite.Sprite):
+
     def __init__(self, x):
         pygame.sprite.Sprite.__init__(self)
         self.image = load_image("images/PaletaPj1.png", True)
@@ -64,6 +71,7 @@ class PalaP1(pygame.sprite.Sprite):
         self.rect.centerx = x
         self.rect.centery = HEIGHT / 2
         self.speed = 0.35
+
     def mover(self, time, keys):
         if self.rect.top >= 0:
             if keys[K_w]:
@@ -71,7 +79,9 @@ class PalaP1(pygame.sprite.Sprite):
         if self.rect.bottom <= HEIGHT:
             if keys[K_s]:
                 self.rect.centery += self.speed * time
+
 class PalaP2(pygame.sprite.Sprite):
+
     def __init__(self, x):
         pygame.sprite.Sprite.__init__(self)
         self.image = load_image("images/PaletaPj2.png", True)
@@ -79,6 +89,7 @@ class PalaP2(pygame.sprite.Sprite):
         self.rect.centerx = x
         self.rect.centery = HEIGHT / 2
         self.speed = 0.35
+
     def mover(self, time, keys):
         if self.rect.top >= 0:
             if keys[K_w]:
@@ -86,16 +97,19 @@ class PalaP2(pygame.sprite.Sprite):
         if self.rect.bottom <= HEIGHT:
             if keys[K_s]:
                 self.rect.centery += self.speed * time
+
     def ia(self, time, bola):
         if bola.speed[0] >= 0 and bola.rect.centerx >= WIDTH/2:
             if self.rect.centery < bola.rect.centery:
                 self.rect.centery += self.speed * time
             if self.rect.centery > bola.rect.centery:
                 self.rect.centery -= self.speed * time
+
 # ---------------------------------------------------------------------
  
 # Funciones
 # ---------------------------------------------------------------------
+
 def load_image(filename, transparent=False):
         try: image = pygame.image.load(filename)
         except pygame.error, message:
@@ -105,8 +119,7 @@ def load_image(filename, transparent=False):
                 color = image.get_at((0,0))
                 image.set_colorkey(color, RLEACCEL)
         return image
-def load_sounds(filename):
-    pygame.mixer.Sound(filename)
+
 def texto(texto, posx, posy, color=(255, 255, 255)):
     fuente = pygame.font.Font("images/DroidSans.ttf", 25)
     salida = pygame.font.Font.render(fuente, texto, 1, color)
@@ -121,13 +134,13 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("PingPong - RETO starus")
     background_image = load_image('images/fondo.jpg')
-    Sonido_pared = load_sounds("sonds/Ping_Pong_Ball_pared.mp2")
-    Sonido_paleta = load_sounds("sonds/Ping_Pong_Ball_paleta.mp2")
+    
     bola = Bola()
     pala_jug1 = PalaP1(20)
     pala_jug2 = PalaP2(WIDTH - 20)
     clock = pygame.time.Clock()
     puntos = [0, 0]
+
     while True:
         time = clock.tick(60)
         keys = pygame.key.get_pressed()
@@ -135,7 +148,7 @@ def main():
             if eventos.type == QUIT:
                 sys.exit(0)
  
-        puntos = bola.actualizar(time,pala_jug1, pala_jug2, puntos, Sonido_pared, Sonido_paleta)
+        puntos = bola.actualizar(time,pala_jug1, pala_jug2, puntos)
         pala_jug1.mover(time, keys)
         pala_jug2.ia(time, bola)
 
@@ -145,12 +158,12 @@ def main():
         screen.blit(background_image, (0, 0))
         screen.blit(p_jug1, p_jug1_rect)
         screen.blit(p_jug2, p_jug2_rect)
-        #screen.fill((255, 255 ,255))
+        #screen.fill((255, 255 ,255)) ##blanco
+        
         # Fonde de color
         screen.blit(bola.image, bola.rect)
         screen.blit(pala_jug1.image, pala_jug1.rect)
         screen.blit(pala_jug2.image, pala_jug2.rect)
-
 
         pygame.display.flip()
 
