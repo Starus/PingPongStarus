@@ -6,6 +6,8 @@
 # Módulos
 import sys, pygame, pygame.mixer
 from pygame.locals import *
+import socket
+import threading
  
 # Constantes
 # ---------------------------------------------------------------------
@@ -13,6 +15,12 @@ WIDTH = 640
 HEIGHT = 480
 sonido_pared = "sonds/Ping_Pong_Ball_pared.mp2"
 sonido_paleta = "sonds/Ping_Pong_Ball_paleta.mp2"
+
+s = socket.socket()
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #reuse address
+host = "0.0.0.0"
+port = 25526
+s.bind((host, port))
 # ---------------------------------------------------------------------
 # Clases
 # ---------------------------------------------------------------------
@@ -92,10 +100,10 @@ class PalaP2(pygame.sprite.Sprite):
 
     def mover(self, time, keys):
         if self.rect.top >= 0:
-            if keys[K_w]:
+            if keys == "w":
                 self.rect.centery -= self.speed * time
         if self.rect.bottom <= HEIGHT:
-            if keys[K_s]:
+            if keys == "s":
                 self.rect.centery += self.speed * time
 
     def ia(self, time, bola):
@@ -129,46 +137,94 @@ def texto(texto, posx, posy, color=(255, 255, 255)):
     return salida, salida_rect
  
 # ---------------------------------------------------------------------
- 
-def main():
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("PingPong - RETO starus")
-    background_image = load_image('images/fondo.jpg')
-    
-    bola = Bola()
-    pala_jug1 = PalaP1(20)
-    pala_jug2 = PalaP2(WIDTH - 20)
-    clock = pygame.time.Clock()
-    puntos = [0, 0]
 
-    while True:
-        time = clock.tick(60)
-        keys = pygame.key.get_pressed()
-        for eventos in pygame.event.get():
-            if eventos.type == QUIT:
-                sys.exit(0)
- 
-        puntos = bola.actualizar(time,pala_jug1, pala_jug2, puntos)
-        pala_jug1.mover(time, keys)
-        pala_jug2.ia(time, bola)
 
-        p_jug1, p_jug1_rect = texto(str(puntos[0]), WIDTH/4, 40)
-        p_jug2, p_jug2_rect = texto(str(puntos[1]), WIDTH-WIDTH/4, 40)
+class Juego:
 
-        screen.blit(background_image, (0, 0))
-        screen.blit(p_jug1, p_jug1_rect)
-        screen.blit(p_jug2, p_jug2_rect)
-        #screen.fill((255, 255 ,255)) ##blanco
-        
-        # Fonde de color
-        screen.blit(bola.image, bola.rect)
-        screen.blit(pala_jug1.image, pala_jug1.rect)
-        screen.blit(pala_jug2.image, pala_jug2.rect)
+	def __init__(self):
+		self.tecla = ""
+		self.tecla_enem = ""
+		self.threads = list()
+		
+		t1 = threading.Thread(target=self.main)
+		self.threads.append(t1)
+		
+		t2 = threading.Thread(target=self.sockpro)
+		self.threads.append(t2)
+		
+		#while True:
+		t1.start()
+		t2.start()
 
-        pygame.display.flip()
+	def sockpro(self):
+		s.listen(5)
+		c, addr = s.accept()
+		print "Joind" , addr
+		if self.tecla:
+			c.send("tecla:%s" % self.tecla)
+		else:
+			c.send("tecla:null")
 
-    return 0
+		data = c.recv(1024)
+		if data:
+			print data
+			recibido = data
+			if recibido.split(":")[1] != "null":
+				self.tecla_enem = recibido.split(":")[1]
+			else:
+				self.tecla_enem = ""
+				
+		c.close()
+
+	def main(self):
+		screen = pygame.display.set_mode((WIDTH, HEIGHT))
+		pygame.display.set_caption("PingPong - RETO starus")
+		background_image = load_image('images/fondo.jpg')
+		
+		
+		
+		bola = Bola()
+		pala_jug1 = PalaP1(20)
+		pala_jug2 = PalaP2(WIDTH - 20)
+		clock = pygame.time.Clock()
+		puntos = [0, 0]
+
+		while True:
+			time = clock.tick(60)
+			keys = pygame.key.get_pressed()
+			
+			for eventos in pygame.event.get():
+				if eventos.type == pygame.KEYDOWN and eventos.key == pygame.K_w:
+					self.tecla = "w"
+				if eventos.type == pygame.KEYDOWN and eventos.key == pygame.K_s:
+					self.tecla = "s"
+				if eventos.type == QUIT:
+					s.close()
+					sys.exit(0)
+					
+	 
+			puntos = bola.actualizar(time,pala_jug1, pala_jug2, puntos)
+			pala_jug1.mover(time, keys)
+			if self.tecla_enem != "":
+				pala_jug2.mover(time, self.tecla_enem)
+
+			p_jug1, p_jug1_rect = texto(str(puntos[0]), WIDTH/4, 40)
+			p_jug2, p_jug2_rect = texto(str(puntos[1]), WIDTH-WIDTH/4, 40)
+
+			screen.blit(background_image, (0, 0))
+			screen.blit(p_jug1, p_jug1_rect)
+			screen.blit(p_jug2, p_jug2_rect)
+			#screen.fill((255, 255 ,255)) ##blanco
+			
+			# Fonde de color
+			screen.blit(bola.image, bola.rect)
+			screen.blit(pala_jug1.image, pala_jug1.rect)
+			screen.blit(pala_jug2.image, pala_jug2.rect)
+
+			pygame.display.flip()
+
+		return 0
  
 if __name__ == '__main__':
     pygame.init()
-    main()
+    Juego()
