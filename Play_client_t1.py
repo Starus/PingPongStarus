@@ -80,14 +80,14 @@ class PalaP1(pygame.sprite.Sprite):
         self.rect.centerx = x
         self.rect.centery = HEIGHT / 2
         self.speed = 0.35
-
     def mover(self, time, keys):
         if self.rect.top >= 0:
-            if keys[K_w]:
+            if keys == "w":
                 self.rect.centery -= self.speed * time
         if self.rect.bottom <= HEIGHT:
-            if keys[K_s]:
+            if keys == "s":
                 self.rect.centery += self.speed * time
+
 
 class PalaP2(pygame.sprite.Sprite):
 
@@ -101,11 +101,12 @@ class PalaP2(pygame.sprite.Sprite):
 
     def mover(self, time, keys):
         if self.rect.top >= 0:
-            if keys == "w":
+            if keys[K_w]:
                 self.rect.centery -= self.speed * time
         if self.rect.bottom <= HEIGHT:
-            if keys == "s":
+            if keys[K_s]:
                 self.rect.centery += self.speed * time
+
 
     def ia(self, time, bola):
         if bola.speed[0] >= 0 and bola.rect.centerx >= WIDTH/2:
