@@ -20,7 +20,8 @@ s = socket.socket()
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #reuse address
 host = "0.0.0.0"
 port = 25526
-s.bind((host, port))
+#s.bind((host, port))
+s.connect((host, port))
 # ---------------------------------------------------------------------
 # Clases
 # ---------------------------------------------------------------------
@@ -157,21 +158,20 @@ class Juego:
         t2.start()
 
     def sockpro(self):
-        s.listen(5)
+        #s.listen(5)
 
         while True:
-            c, addr = s.accept()
             while True:
                 #print "Joind" , addr
                 #c.send("Gracias por entrar.")
                 if self.tecla:
-                    c.send("tecla:%s" % self.tecla)
+                    s.send("tecla:%s" % self.tecla)
                 else:
-                    c.send("tecla:null")
-                data = c.recv(1024)
+                    s.send("tecla:null")
+                data = s.recv(1024)
                 if data == "exit":
-                    c.send("\0\xDE\xAD\0")
-                    c.close()
+                    s.send("\0\xDE\xAD\0")
+                    s.close()
                     break
                 if data:
                     print "data: %s" % data
@@ -182,9 +182,10 @@ class Juego:
                         self.tecla_enem = ""
                     #c.send("%s" % data)
 
+
     def main(self):
         screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("PingPong - RETO starus server")
+        pygame.display.set_caption("PingPong - RETO starus client")
         background_image = load_image('images/fondo.jpg')
 
         bola = Bola()
@@ -207,9 +208,9 @@ class Juego:
                     sys.exit(0)
 
             puntos = bola.actualizar(time,pala_jug1, pala_jug2, puntos)
-            pala_jug1.mover(time, keys)
+            pala_jug2.mover(time, keys)
             if self.tecla_enem != "":
-                pala_jug2.mover(time, self.tecla_enem)
+                pala_jug1.mover(time, self.tecla_enem)
 
             p_jug1, p_jug1_rect = texto(str(puntos[0]), WIDTH/4, 40)
             p_jug2, p_jug2_rect = texto(str(puntos[1]), WIDTH-WIDTH/4, 40)
@@ -231,3 +232,4 @@ class Juego:
 if __name__ == '__main__':
     pygame.init()
     Juego()
+
