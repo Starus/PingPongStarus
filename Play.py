@@ -8,6 +8,7 @@ import sys, pygame, pygame.mixer
 from pygame.locals import *
 import socket
 import threading
+import platform
  
 # Constantes
 # ---------------------------------------------------------------------
@@ -21,6 +22,8 @@ s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #reuse address
 host = "0.0.0.0"
 port = 25526
 s.bind((host, port))
+
+
 # ---------------------------------------------------------------------
 # Clases
 # ---------------------------------------------------------------------
@@ -119,7 +122,7 @@ class PalaP2(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------
 
 def load_image(filename, transparent=False):
-        try: image = pygame.image.load(filename)
+        try:image = pygame.image.load(filename)
         except pygame.error, message:
                 raise SystemExit, message
         image = image.convert()
@@ -154,7 +157,7 @@ class Juego:
 
         #while True:
         t1.start()
-        t2.start()
+        #t2.start()
 
     def sockpro(self):
         s.listen(5)
@@ -183,17 +186,28 @@ class Juego:
                     #c.send("%s" % data)
 
     def main(self):
-        screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        print "I am in main"
+        try:
+            print "Try except main part"
+            screen = pygame.display.set_mode((WIDTH, HEIGHT))
+            
+            print "Try except after screen"
+        except Exception as e:
+            print "There was a problem starting pygame screen"
+            print e
+        print "I declared screen variable"
         pygame.display.set_caption("PingPong - RETO starus server")
         background_image = load_image('images/fondo.jpg')
+        print "I am after background variable"
 
         bola = Bola()
         pala_jug1 = PalaP1(20)
         pala_jug2 = PalaP2(WIDTH - 20)
         clock = pygame.time.Clock()
         puntos = [0, 0]
-
+        
         while True:
+            #print pygame.event.wait()
             time = clock.tick(60)
             keys = pygame.key.get_pressed()
 
@@ -204,6 +218,7 @@ class Juego:
                     self.tecla = "s"
                 if eventos.type == QUIT:
                     s.close()
+                    pygame.quit()
                     sys.exit(0)
 
             puntos = bola.actualizar(time,pala_jug1, pala_jug2, puntos)
@@ -229,5 +244,9 @@ class Juego:
         return 0
  
 if __name__ == '__main__':
-    pygame.init()
+    if platform.system() == "Linux":
+        pygame.init()
+    pygame.font.init()
+    pygame.mixer.init()
     Juego()
+    

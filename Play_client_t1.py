@@ -231,6 +231,9 @@ class Juego:
         return 0
  
 if __name__ == '__main__':
-    pygame.init()
+    if platform.system() == "Linux":
+        pygame.init()
+    pygame.font.init()
+    pygame.mixer.init()
     Juego()
 
