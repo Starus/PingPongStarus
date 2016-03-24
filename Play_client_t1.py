@@ -7,6 +7,7 @@
 import sys, pygame, pygame.mixer
 from pygame.locals import *
 import socket
+import platform
 import threading
  
 # Constantes
@@ -18,7 +19,7 @@ sonido_paleta = "sonds/Ping_Pong_Ball_paleta.mp2"
 
 s = socket.socket()
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #reuse address
-host = "0.0.0.0"
+host = "127.0.0.1"
 port = 25526
 #s.bind((host, port))
 s.connect((host, port))
